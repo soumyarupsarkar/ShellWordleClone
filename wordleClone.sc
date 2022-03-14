@@ -59,9 +59,11 @@ def runWordle(hardMode: Boolean = false, date: String = yyyyMMddFormatter.format
 
   println(s"Date: ${today}.")
   if (hardMode) println("Hard mode.")
+  // todo: just make this a fold/scan
   var attemptNumber = 0
   var success = false
   var previousGuess = ""
+  var guesses = Vector.empty[String]
   while (attemptNumber < 6 && !success) {
     val guessedWord = Option(scala.io.StdIn.readLine()).getOrElse("").trim.toLowerCase
     if (validateWord(guessedWord, targetWord, previousGuess, hardMode)) {
@@ -69,6 +71,7 @@ def runWordle(hardMode: Boolean = false, date: String = yyyyMMddFormatter.format
       attemptNumber = attemptNumber + 1
       println(attemptNumber + " " + (0 until guessedWord.size).map(x => if (greens.contains(x)) s"${AnsiColor.GREEN}${guessedWord(x)}${AnsiColor.RESET}" else if (yellows.contains(x)) s"${AnsiColor.YELLOW}${guessedWord(x)}${AnsiColor.RESET}" else if (greys.contains(x)) s"${AnsiColor.RED}${guessedWord(x)}${AnsiColor.RESET}" else "_").mkString)
       previousGuess = guessedWord
+      guesses = guesses :+ guessedWord
       if (guessedWord == targetWord) success = true
     } else {
       println("Invalid word.")
@@ -76,5 +79,10 @@ def runWordle(hardMode: Boolean = false, date: String = yyyyMMddFormatter.format
   }
 
   if (success) println("Congratulations! You guessed the target word.") else println("Out of guesses! The target word was " + targetWord + ".")
+
+  println()
+  println("To share, copy:")
+  println(s"Date: ${today}" + (if (hardMode) ", hard mode." else "."))
+  println(guesses.map{guessedWord => val (greens, yellows, greys) = greensYellowsAndGrays(targetWord, guessedWord); (0 until guessedWord.size).map(x => if (greens.contains(x)) "🟩" else if (yellows.contains(x)) "🟨" else if (greys.contains(x)) "🟥" else "_").mkString}.mkString("\n"))
 }
 
