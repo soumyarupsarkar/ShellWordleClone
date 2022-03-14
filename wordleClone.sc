@@ -2,8 +2,10 @@
 // -*- mode: scala; -*-
 
 // wordle clone for console.
-// usage: ./wordleClone.sc
-//        ./wordleClone.sc --date 2022-03-13 --hardMode true
+// usage: ./wordleClone.sc run
+//        ./wordleClone.sc run --date 2022-03-13 --hardMode true
+//        ./wordleClone.sc cheat
+//        ./wordleClone.sc cheat --date 2022-03-13
 
 // circe
 import $ivy.`io.circe::circe-generic:0.13.0`, io.circe._, io.circe.generic.auto._, io.circe.syntax._, io.circe.generic.JsonCodec
@@ -21,7 +23,25 @@ def removeFirst[A](xs: List[A])(x: A): List[A] = xs.patch(xs.indexOf(x), Nil, 1)
 // alternatively: xs.zipWithIndex.filterNot(_._2 == xs.indexOf(x)).map(_._1)
 
 @main
-def runWordle(hardMode: Boolean = false, date: String = yyyyMMddFormatter.format(LocalDate.now())) = {
+def cheat(date: String = yyyyMMddFormatter.format(LocalDate.now())) = {
+  val wordleSnapshot = scala.io.Source.fromFile("wordle.json").mkString
+  val today = LocalDate.parse(date, yyyyMMddFormatter)
+
+  case class Wordle(targets: List[String], valids: List[String])
+
+  val wordle = decode[Wordle](wordleSnapshot).toOption.get
+
+  val targetsStartingDate = LocalDate.parse("2021-06-19", yyyyMMddFormatter)
+  val targetDates = wordle.targets.indices.map(x => targetsStartingDate.plusDays(x))
+  val dateToTarget = (wordle.targets zip targetDates).map(x => x._2 -> x._1).toMap
+
+  val targetWord = dateToTarget(today)
+
+  println(s"Target word for ${today}: ${targetWord}")
+}
+
+@main
+def run(hardMode: Boolean = false, date: String = yyyyMMddFormatter.format(LocalDate.now())) = {
   // snapshot from embedded JS on https://www.nytimes.com/games/wordle/index.html taken on 2022-03-13.
   // targets start on 2021-06-19.
   val wordleSnapshot = scala.io.Source.fromFile("wordle.json").mkString
